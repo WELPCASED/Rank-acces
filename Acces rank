@@ -1,0 +1,72 @@
+-- Function to trigger all RemoteEvents in the game
+local function triggerAllRemoteEvents()
+    -- Iterate through all descendants of ReplicatedStorage
+    for _, v in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            -- Trigger the RemoteEvent once
+            v:FireServer()  -- Use FireServer() since this is a client-side script
+            print("Triggered RemoteEvent: " .. v.Name)
+        end
+    end
+
+    -- Optionally, you can also check in Workspace or other locations if needed
+    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            -- Trigger the RemoteEvent once
+            v:FireServer()  -- Use FireServer() for client invocation
+            print("Triggered RemoteEvent: " .. v.Name)
+        end
+    end
+end
+
+-- Create the UI Button
+local player = game.Players.LocalPlayer
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player.PlayerGui
+
+local triggerButton = Instance.new("TextButton")
+triggerButton.Size = UDim2.new(0, 200, 0, 50)  -- Size of the button
+triggerButton.Position = UDim2.new(0.5, -100, 0.5, -25)  -- Center the button
+triggerButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background
+triggerButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+triggerButton.Text = "Teleport"  -- Updated button text
+triggerButton.Parent = screenGui
+
+-- Connect the button to trigger all RemoteEvents 100 times
+triggerButton.MouseButton1Click:Connect(function()
+    for i = 1, 100 do  -- Loop to trigger all events 100 times
+        triggerAllRemoteEvents()
+        wait(0.0001)  -- Delay of 0.0001 seconds between triggers
+    end
+end)
+
+-- Make the button draggable
+local dragging
+local dragInput
+local startPos
+local startPosX
+local startPosY
+
+triggerButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        startPos = triggerButton.Position
+        startPosX = input.Position.X
+        startPosY = input.Position.Y
+        dragInput = input
+    end
+end)
+
+triggerButton.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.Touch then
+        local deltaX = input.Position.X - startPosX
+        local deltaY = input.Position.Y - startPosY
+        triggerButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + deltaX, startPos.Y.Scale, startPos.Y.Offset + deltaY)
+    end
+end)
+
+triggerButton.InputEnded:Connect(function(input)
+    if input == dragInput then
+        dragging = false
+    end
+end)
